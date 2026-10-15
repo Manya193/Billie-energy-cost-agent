@@ -1,99 +1,283 @@
 # Billie — Energy Cost Intelligence Agent
 
-Billie is a runnable hackathon demo for a simulated Alexa+ energy-cost assistant. It combines:
+Billie is a runnable hackathon demo of a simulated Alexa+ energy-cost assistant. It helps users understand household energy consumption, explore projected electricity costs, identify unusual usage against configured baselines, and discover potential cost-saving opportunities.
 
-- Deterministic electricity bill intelligence.
-- Simulator-grounded energy alerts and matching cost-saving recommendations.
-- Authorized simulated actions and verification.
-- A self-hosted JSON-RPC MCP-style Streamable HTTP endpoint at `/mcp`.
-- A lightweight web conversation UI served by the same Python app.
+The project combines a lightweight web conversation interface, deterministic energy calculations, a virtual smart-home simulator, and an MCP-style tool interface.
 
-This demo uses clearly labeled synthetic data. It does not control real appliances and does not claim production Alexa+ integration.
+**Important:** Billie uses synthetic data and simulated appliance states. It does not control real appliances, access real smart-home sensors, or claim production Alexa+ integration.
 
-## Foundation
+## Key Features
 
-The repository was empty, so the first implementation uses Python 3.13 standard-library modules only: `http.server`, `sqlite3`, `json`, and `unittest`. This keeps the demo reproducible while preserving the intended architecture:
+- **Electricity cost intelligence:** Calculates projected energy consumption and electricity costs using configured appliance ratings, schedules, and tariff values.
+- **Simulator-grounded alerts:** Identifies when projected appliance usage exceeds configured baseline thresholds.
+- **Cost-saving recommendations:** Generates recommendations from the same simulator state and cost calculations used by the dashboard alerts.
+- **Virtual smart-home simulator:** Models six household devices and allows their simulated states and schedules to be changed.
+- **Appliance-specific routines:** Lets users review and confirm simulated routine changes before updating virtual appliance schedules.
+- **MCP-style tool interface:** Provides a self-hosted JSON-RPC HTTP endpoint at `/mcp` for tool discovery and execution.
+- **Conversation interface:** Serves a lightweight web UI and API through the Python application.
+- **Bill attribution:** Compares projected appliance costs against configured baselines over a 30-day period.
+- **Voice output:** Supports browser-based spoken replies and optional spoken alerts where the browser supports the Web Speech API.
+- **Automated tests:** Includes a test suite for checking application behavior and core functionality.
 
-Simulated Alexa+ web UI -> orchestration endpoint -> MCP tool calls -> deterministic energy services -> SQLite state -> explanation layer.
+## How Billie Works
 
-The MCP endpoint implements the JSON-RPC methods needed for this demo:
+Billie follows a simulator-grounded architecture:
 
-- `initialize`
-- `tools/list`
-- `tools/call`
+```text
+Web Conversation UI
+        |
+        v
+Application / Orchestration Logic
+        |
+        v
+MCP-Style JSON-RPC Tool Interface
+        |
+        v
+Deterministic Energy Services
+        |
+        v
+Virtual Appliance Simulator
+        |
+        v
+SQLite Database
+        |
+        v
+Calculated Results and Explanations
+```
 
-The transport is a single HTTP endpoint, `/mcp`, using POST requests with JSON-RPC messages, matching the Streamable HTTP direction rather than the older standalone SSE-first style.
+The virtual simulator is the source of truth for appliance states and projected energy usage. Deterministic application logic calculates projected consumption, costs, baseline differences, alerts, and recommendations.
 
-## Run (two PowerShell terminals)
+Simulator-related conversation responses use the same underlying data and calculations as the dashboard. This helps keep displayed values, recommendations, and tool results consistent.
 
-Install the MCP SDK in the same Python environment used for the app (`python -m pip install mcp`).
+## Technology Stack
 
-Terminal 1 — start the MCP server on port 8766:
+- **Language:** Python 3.13
+- **Backend:** Python standard-library HTTP server
+- **Frontend:** HTML, CSS, JavaScript
+- **Database:** SQLite
+- **Tool communication:** JSON-RPC over HTTP using an MCP-style interface
+- **Testing:** Python `unittest`
+- **Voice output:** Browser speech synthesis, where supported
+
+The main application uses Python standard-library modules, including `http.server`, `sqlite3`, and `json`. The standalone MCP server requires the MCP Python SDK.
+
+## Project Structure
+
+```text
+Billie/
+├── backend/
+│   └── app/
+│       ├── __init__.py
+│       ├── agent.py
+│       ├── db.py
+│       ├── energy.py
+│       ├── mcp_server.py
+│       ├── server.py
+│       ├── simulator.py
+│       └── tools.py
+├── data/
+│   └── billie.sqlite3
+├── frontend/
+│   ├── app.js
+│   ├── index.html
+│   └── styles.css
+├── tests/
+│   ├── test_app_flow.py
+│   └── test_billie.py
+├── .env.example
+├── .gitignore
+├── README.md
+├── mcp_check.py
+├── PRODUCT_FEEDBACK.md
+└── FRICTION_LOG.md
+```
+
+## Prerequisites
+
+- Python 3.13 or a compatible Python version.
+- PowerShell or another terminal.
+- A modern web browser.
+
+The main web application uses Python standard-library modules. Install the MCP SDK in the same Python environment if you intend to run the standalone MCP server.
+
+## Installation and Setup
+
+Clone the repository:
+
+```powershell
+git clone https://github.com/Manya193/Billie-energy-cost-agent.git
+cd Billie-energy-cost-agent
+```
+
+If your extracted project folder is named `Billie`, open the terminal in the directory that contains the `backend`, `frontend`, and `tests` folders.
+
+To install the MCP SDK for the standalone MCP server:
+
+```powershell
+python -m pip install mcp
+```
+
+## Running Billie Locally
+
+### Terminal 1 — Start the MCP server
+
+From the project root:
 
 ```powershell
 python -m backend.app.mcp_server
 ```
 
-Terminal 2 — from the same project root, start the website/API on port 8765:
+The standalone MCP server is configured to use port `8766`.
+
+### Terminal 2 — Start the web application
+
+From the same project root:
 
 ```powershell
 python -m backend.app.server
 ```
 
-Then open:
+The web application uses port `8765` by default.
 
-```text
+Open the application in your browser:
+
 http://127.0.0.1:8765
-```
 
-## Test
-
-```powershell
-python -m unittest discover -s tests
-```
-
-## Demo Flow
-
-1. Open the web app and inspect the six simulated appliance cards.
-2. The Energy alerts and Cost-saving recommendations are generated from the same simulator state and use the same baseline, projected kWh/day, and tariff.
-3. Click "Simulate worsening" to switch the AC on with a six-hour daily schedule; the AC's projected usage, alert, and recommendation update together.
-4. Ask Billie about current usage, an appliance, active alerts, or potential savings. Simulator-related answers are grounded in the current appliance state.
-5. Request an appliance-specific routine, review the proposal, and confirm it. The confirmed routine updates the virtual appliance schedule and refreshes the calculations.
-
-## Bedrock
-
-The explanation layer is structured so Amazon Bedrock can be added as the wording provider while deterministic findings remain the numerical source of truth. This local demo currently uses the deterministic fallback because no AWS credentials or Bedrock model access were configured or tested in this environment.
-
-## Synthetic Data
-
-All readings, bills, baselines, alerts, and interventions are synthetic and stored in `data/billie.sqlite3` when the app runs.
-
-
+The web application and standalone MCP server are separate processes. Run the MCP server when you need to test its standalone endpoint.
 
 ## Virtual Smart-Home Simulator
 
-The dashboard includes a deterministic virtual home with six devices: AC, living-room lights, kitchen fridge, EV charger, home theatre, and water heater.
+Billie includes six simulated household devices:
 
-- `GET /api/simulator` returns appliance states, scheduled hours, projected daily kWh, cost estimates, baseline comparisons, and monthly projections.
-- `POST /api/simulator/update` accepts `{"id":"ac","is_on":true}` and/or `{"id":"ac","scheduled_hours":6}`.
-- `POST /api/simulator/reset` restores the virtual appliance defaults.
-- Energy projections are calculated from rated kW × scheduled hours when a device is switched on. These are simulated estimates, not physical measurements.
+1. Air conditioner (AC)
+2. Living-room lights
+3. Kitchen refrigerator
+4. Electric vehicle (EV) charger
+5. Home theatre
+6. Water heater
 
-## Simulator-backed bill attribution update
+The simulator provides appliance states, scheduled operating hours, projected daily energy consumption, cost estimates, baseline comparisons, and monthly projections.
 
-The `get_bill_history` and `explain_bill` MCP tools now compare the current appliance schedule against the simulator's configured appliance baselines over a 30-day projection. Each appliance's monthly cost delta is shown as an increase or reduction; the sum reconciles to the net projected bill difference using the configured tariff. This is explicitly a synthetic simulator comparison, not a claim about an actual utility invoice. The dashboard labels the comparison as a simulated projection versus baseline. Actual MCP tool calls and their results appear in the trace after a Billie chat request.
+### Simulator API
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/simulator` | Retrieves the current simulated appliance states and energy projections. |
+| `POST /api/simulator/update` | Updates a simulated appliance state or schedule. |
+| `POST /api/simulator/reset` | Restores the default virtual appliance states. |
+
+Example update request:
+
+```json
+{
+  "id": "ac",
+  "is_on": true,
+  "scheduled_hours": 6
+}
+```
+
+These endpoints modify the virtual simulator only. They do not send commands to physical appliances.
+
+### Energy Calculations
+
+Projected daily energy consumption is calculated using the appliance's rated power and scheduled operating hours when the appliance is switched on.
+
+The simulator's configured tariff is used to estimate electricity costs. Actual results depend on the configured appliance values, schedules, tariff, and baseline assumptions.
+
+## Demo Walkthrough
+
+1. Start the web application and open the dashboard.
+2. Inspect the six simulated appliance cards and their projected energy usage.
+3. Review the energy alerts and matching cost-saving recommendations.
+4. Select **Simulate worsening** to apply the predefined scenario that increases AC usage.
+5. Observe how the projected consumption, alert, and recommendation update together.
+6. Ask Billie about current usage, a particular appliance, active alerts, or potential savings.
+7. Request an appliance-specific routine, review the proposed change, and confirm it.
+8. Verify that the virtual schedule and associated calculations reflect the confirmed change.
+
+The exact behavior depends on the simulator state and the application's configured rules.
+
+## MCP-Style JSON-RPC Interface
+
+Billie includes a self-hosted JSON-RPC HTTP endpoint at:
+
+`/mcp`
+
+The implementation supports the methods needed by this demo:
+
+- `initialize`
+- `tools/list`
+- `tools/call`
+
+The endpoint uses HTTP POST requests containing JSON-RPC messages. The website and MCP server use the same SQLite database file, allowing simulator changes to be reflected in tool results.
+
+Actual MCP tool calls and their results can be inspected in the conversation trace after a Billie chat request.
+
+This is a project-specific MCP-style implementation. Do not assume that every feature or transport behavior of a complete MCP implementation is supported without further testing.
+
+## Simulated Bill Attribution
+
+Billie's bill-attribution tools compare the current virtual appliance schedules with configured appliance baselines over a 30-day projection.
+
+The comparison includes:
+
+- Estimated monthly appliance costs.
+- Cost increases or reductions relative to the baseline.
+- The projected net bill difference.
+- Reconciliation of appliance-level cost differences using the configured tariff.
+
+These results are synthetic projections. They do not represent an actual electricity utility invoice or verified household consumption.
+
+## Alerts and Voice Output
+
+Billie's dashboard displays simulator-generated alerts and corresponding cost-saving recommendations.
+
+The alerts currently use configured baseline thresholds applied to projected daily usage. They are not real sensor alerts.
+
+The browser UI also supports spoken replies and controls for spoken alerts where browser speech synthesis is available. Users can mute spoken alerts or request that active alerts be read aloud.
+
+Voice playback depends on browser capabilities and permissions. Visual alerts remain available if speech output is unavailable.
 
 
-## End-to-end source-of-truth notes
+## Synthetic Data and Limitations
 
-- The website and MCP server use the same SQLite database file, so simulator changes are visible to MCP tools.
-- The virtual appliance simulator is the single source of truth for projected usage alerts, cost-saving recommendations, and simulator-related chat answers. Alert and recommendation entries share the same qualifying set and cost calculation.
-- Simulator-related chat answers use the deterministic `simulator_grounded` path so a language model cannot independently recalculate or invent appliance figures. General questions may still use the Ollama/MCP agent when available.
-- Bill attribution compares the current scheduled routine with the configured appliance baseline over 30 days. The signed appliance deltas reconcile to the projected net difference. All amounts are synthetic projections, not an actual utility invoice.
-- Automated alerts currently use configured baseline thresholds against projected daily usage. Simulated-time accumulation is available separately; do not describe projected warnings as real sensor alerts.
+Billie uses synthetic readings, bills, baselines, alerts, and interventions. The SQLite database stores the demo's application and simulator state.
 
-### Voice alerts and concise recommendations
+Keep the following limitations in mind:
 
-The browser UI supports spoken Billie replies plus a separate **Alerts spoken / Alerts muted** control. Newly appearing simulator alerts are announced aloud once; **Read active alerts** reads the current alert cards on demand. Visual alerts remain available as a fallback. Browser speech output requires a browser that supports `speechSynthesis`; some browsers require a user click before audio playback.
+- Appliance states and schedules are virtual.
+- Energy consumption and electricity costs are estimates based on configured assumptions.
+- Alerts are generated from projected usage and configured thresholds.
+- Bill attribution compares simulated projections with configured baselines.
+- The demo does not control physical appliances or access real smart-home sensors.
+- Production Alexa+ integration is not implemented.
+- Amazon Bedrock integration is not implemented.
+- General questions may use the optional Ollama/MCP agent when available; its availability and behavior depend on the local configuration.
 
-Simulator-generated savings suggestions use the exact same appliance, projected daily usage, baseline, threshold, and tariff values as the visible alert. Accumulated energy is displayed separately from projected kWh/day so unlike measures are not compared. Responses stay concise and spoken-friendly.
+## Running the Tests
+
+From the project root, run:
+
+```powershell
+python -m unittest discover -s tests -v
+```
+
+The tests exercise application flows and core Billie functionality.
+
+## Future Improvements
+
+Potential future improvements include:
+
+- Integrating and testing a language model for natural-language explanations.
+- Adding real energy-meter integrations with appropriate authorization.
+- Supporting persistent deployment storage for simulator state.
+- Improving monitoring, logging, and deployment configuration.
+- Expanding automated tests for tool communication and error handling.
+
+These are potential improvements, not claims about features already implemented.
+
+## Project Goal
+
+Billie demonstrates how deterministic energy calculations, a virtual smart-home simulator, tool-based orchestration, and a conversational interface can work together to explain projected household energy costs and suggest potential savings.
+
+Its central design principle is that energy figures and simulator-grounded findings should come from the application's calculation logic rather than being invented by a language model.
