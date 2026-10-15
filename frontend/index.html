@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Billie — Energy Cost Intelligence Agent</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="conversation" aria-label="Simulated Alexa+ conversation">
+        <header class="brand-header">
+          <div class="brand-lockup"><span class="brand-mark" aria-hidden="true">ϟ</span><div><h1>Billie</h1><p class="brand-subtitle">ENERGY COST INTELLIGENCE</p></div></div>
+          <span class="demo-pill"><i></i> Demo mode</span>
+        </header>
+        <section class="billie-hero" aria-label="Talk to Billie">
+          <div class="orb-wrap" aria-hidden="true"><div class="orb"><span>▥</span></div></div>
+          <h2>Hi, I'm Billie.</h2><p>Ask about your energy costs, or let me find opportunities to save.</p>
+          <div class="quick-prompts"><button type="button" class="prompt-chip" data-prompt="Why is my electricity bill high?">Why is my bill high?</button><button type="button" class="prompt-chip" data-prompt="What should I adjust to save money?">Find savings</button></div>
+        </section>
+        <div id="messages" class="messages"></div>
+        <form id="chatForm" class="composer">
+          <input id="messageInput" autocomplete="off" placeholder="Ask Billie anything about your energy…" />
+          <button type="submit">Send</button>
+        </form>
+      </section>
+
+      <aside class="panel" aria-label="Energy intelligence">
+        <div class="panel-topline"><div><p class="eyebrow">Your virtual home</p><h2>Energy overview</h2></div><span class="synthetic-pill">Synthetic data</span></div>
+        <div id="overview" class="overview"></div>
+        <section class="simulator">
+          <div class="section-heading">
+            <div><p class="eyebrow">Virtual environment</p><h2>Smart-home simulator</h2></div>
+            <div class="sim-controls"><button id="simAdvanceBtn" type="button">Advance 1 simulated hour</button><button id="simResetBtn" class="secondary" type="button">Reset home</button></div>
+          </div>
+          <p class="muted">Synthetic simulation. Change device settings, then advance simulated time to accumulate energy and cost.</p>
+          <div id="simSummary" class="sim-summary"></div>
+          <div id="deviceGrid" class="device-grid"><p>Loading virtual appliances…</p></div>
+        </section>
+
+        <section class="intelligence-card">
+          <div class="section-heading"><div><p class="eyebrow">Live simulator analysis</p><h2>Energy alerts</h2></div><span id="alertCount" class="status off">Checking</span></div>
+          <div id="simAlerts"><p class="muted">Alerts will appear when projected usage exceeds a configured baseline.</p></div>
+        </section>
+        <section class="intelligence-card">
+          <div class="section-heading"><div><p class="eyebrow">Calculated from simulator</p><h2>Cost-saving opportunities</h2></div></div>
+          <div id="savingsList"><p class="muted">Adjust appliance routines to see evidence-based opportunities.</p></div>
+        </section>
+
+        <section class="demo-controls">
+          <div class="section-heading"><div><p class="eyebrow">For repeatable judging</p><h2>Demo controls</h2></div></div>
+          <div class="actions"><button id="resetBtn">Reset demo</button><button id="evalBtn">Evaluate usage</button><button id="worsenBtn">Simulate worsening</button><button id="actionBtn">Authorize simulated action</button></div>
+        </section>
+        <details class="trace-panel" open>
+          <summary><span>MCP tool trace</span><small>Technical evidence</small></summary>
+          <pre id="trace">Ask Billie a question to display the actual MCP tool calls, arguments, and results.</pre>
+        </details>
+      </aside>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>
+
