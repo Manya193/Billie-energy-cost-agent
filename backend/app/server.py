@@ -519,8 +519,8 @@ class BillieHandler(BaseHTTPRequestHandler):
 
 
 def main():
-    host = os.environ.get("BILLIE_HOST", "127.0.0.1")
-    port = int(os.environ.get("BILLIE_PORT", "8765"))
+    port = int(os.environ.get("PORT", os.environ.get("BILLIE_PORT", "8765")))
+    host = "0.0.0.0" if os.environ.get("PORT") else os.environ.get("BILLIE_HOST", "127.0.0.1")
     with connect() as conn:
         ensure_demo_data(conn)
     server = ThreadingHTTPServer((host, port), BillieHandler)
