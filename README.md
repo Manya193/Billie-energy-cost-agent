@@ -6,7 +6,7 @@ Billie is an energy cost intelligence application that analyzes simulated househ
 
 The project combines a Python backend, a web frontend, SQLite storage, and an MCP-compatible HTTP interface for agent-tool interaction.
 
-🌐 Live Demo
+# 🌐 Live Demo
 
 Access Billie online: https://billie-energy-cost-agent.onrender.com
 
